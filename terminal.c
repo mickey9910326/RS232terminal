@@ -1,9 +1,9 @@
 // use MinGW gcc
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <inttypes.h>
+#include <getopt.h>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -23,7 +23,60 @@ void RS232_rx();
 
 uint8_t IsConnected = 0;
 
-int main(void) {
+int main(int argc, char **argv) {
+	int ch;
+	while (1) {
+        static struct option long_options[] =
+          {
+            {"help",       no_argument,       0, '?' },
+            {"port",       required_argument, 0, 'P'},
+            {"baudrate" ,  required_argument, 0, 'B'},
+            {0, 0, 0, 0}
+          };
+        /* getopt_long stores the option index here. */
+        int option_index = 0;
+
+        ch = getopt_long (argc, argv, "P:B:",
+                         long_options, &option_index);
+
+        /* Detect the end of the options. */
+        if (ch == -1)
+          break;
+
+        switch (ch) {
+          case 0:
+            /* If this option set a flag, do nothing else now. */
+            if (long_options[option_index].flag != 0)
+              break;
+            printf ("option %s", long_options[option_index].name);
+            if (optarg)
+              printf (" with arg %s", optarg);
+            printf ("\n");
+            break;
+
+          case 'B':
+			BDRATE = (int)strtoimax(optarg,NULL,10);
+            break;
+
+          case 'P':
+  			CPORT_NR = (int)strtoimax(optarg,NULL,10)-1;
+            break;
+
+          case '?':
+            printf("\nUsage: termainal.exe [--port <com>] [--baudrate <baud>]\n");
+			printf("  --port <com>, -P        Use desinated port <com>\n");
+			printf("  --baudrate <baud>, -B   Set baudrate\n");
+			printf("  --help, -?              Display this information\n");
+			return 0;
+            break;
+
+          default:
+            abort ();
+          }
+      }
+
+
+
 	pthread_t id;
 	char ins[512]; // input string
 
@@ -33,29 +86,21 @@ int main(void) {
 		printf ("Create pthread error!\n");
 		exit (1);
 	}
-	while (1) {
-		scanf("%s",ins);
-		if ( strcmp(ins,"read") == 0 ) {
-			printf("Read settings from settings.txt");
-		}
-		if ( strcmp(ins,"c") == 0 ) {
 
-			if(RS232_OpenComport(CPORT_NR, BDRATE, mode)) {
-				printf("Can not connect to COM%d\n",CPORT_NR+1);
-			} else {
-				printf("Connect to COM%d\n",CPORT_NR+1);
-				IsConnected = 1;
-				while ( 1 ) {
-					scanf("%s",tx_buf);
-					if(strcmp(tx_buf,"q")==0) break;
-					RS232_cputs(CPORT_NR,tx_buf);
-					RS232_SendByte(CPORT_NR, 10 );
-				}
-				RS232_CloseComport(CPORT_NR);
-				printf("Disconnect from COM%d\n",CPORT_NR+1);
-				IsConnected = 0;
-			}
+	if(RS232_OpenComport(CPORT_NR, BDRATE, mode)) {
+		printf("Can not connect to COM%d\n",CPORT_NR+1);
+	} else {
+		printf("Connect to COM%d\n",CPORT_NR+1);
+		IsConnected = 1;
+		while ( 1 ) {
+			scanf("%s",tx_buf);
+			if(strcmp(tx_buf,"q")==0) break;
+			RS232_cputs(CPORT_NR,tx_buf);
+			RS232_SendByte(CPORT_NR, 10 );
 		}
+		RS232_CloseComport(CPORT_NR);
+		printf("Disconnect from COM%d\n",CPORT_NR+1);
+		IsConnected = 0;
 	}
 	return (0);
 }
