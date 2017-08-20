@@ -12,7 +12,7 @@ Download the executable file`termainal.exe` and library `pthreadGC2.dll`
 
 - - -
 ## Usage  
-`$ terminal [--port <com>] [--hex <file_name>]  `  
+`$terminal [--port <com>] [--baudrate <rate>] [options...] `   
 
 | Options    |  Description    |
 | :------------- | :------------- |
