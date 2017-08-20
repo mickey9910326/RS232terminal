@@ -11,6 +11,8 @@
 #include <unistd.h>
 #endif
 
+#define VERSION "v0.2"
+
 #include "rs232.h"
 
 int CPORT_NR = 2;
@@ -28,15 +30,16 @@ int main(int argc, char **argv) {
 	while (1) {
         static struct option long_options[] =
           {
-            {"help",       no_argument,       0, '?' },
-            {"port",       required_argument, 0, 'P'},
-            {"baudrate" ,  required_argument, 0, 'B'},
+            {"help"     , no_argument      , 0, '?'},
+			{"version"  , no_argument      , 0, 'v'},
+            {"port"     , required_argument, 0, 'p'},
+			{"baudrate" , required_argument, 0, 'b'},
             {0, 0, 0, 0}
           };
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        ch = getopt_long (argc, argv, "P:B:",
+        ch = getopt_long (argc, argv, "p:b:v",
                          long_options, &option_index);
 
         /* Detect the end of the options. */
@@ -44,41 +47,46 @@ int main(int argc, char **argv) {
           break;
 
         switch (ch) {
-          case 0:
-            /* If this option set a flag, do nothing else now. */
-            if (long_options[option_index].flag != 0)
-              break;
-            printf ("option %s", long_options[option_index].name);
-            if (optarg)
-              printf (" with arg %s", optarg);
-            printf ("\n");
-            break;
+			case 0:
+				/* If this option set a flag, do nothing else now. */
+				if (long_options[option_index].flag != 0)
+					break;
+				printf ("option %s", long_options[option_index].name);
+				if (optarg)
+					printf (" with arg %s", optarg);
+				printf ("\n");
+			break;
 
-          case 'B':
-			BDRATE = (int)strtoimax(optarg,NULL,10);
-            break;
-
-          case 'P':
-  			CPORT_NR = (int)strtoimax(optarg,NULL,10)-1;
-            break;
-
-          case '?':
-            printf("\nUsage: termainal.exe [--port <com>] [--baudrate <baud>]\n");
-			printf("  --port <com>, -P        Use desinated port <com>\n");
-			printf("  --baudrate <baud>, -B   Set baudrate\n");
-			printf("  --help, -?              Display this information\n");
-			return 0;
-            break;
-
-          default:
-            abort ();
-          }
+			case 'b':
+				BDRATE = (int)strtoimax(optarg,NULL,10);
+				break;
+			case 'p':
+				CPORT_NR = (int)strtoimax(optarg,NULL,10)-1;
+				break;
+			case 'v':
+				printf("Now version is %s\n",VERSION);
+				return 0;
+				break;
+			case '?':
+				printf("\nUsage: termainal.exe [--port <com>] [--baudrate <baud>]\n");
+				printf("  --port <com>        Use desinated port <com>\n");
+				printf("  -p <com>            Same as --port <com>\n");
+				printf("  --baudrate <baud>   Set baudrate\n");
+				printf("  -b <baud>           Same as -b <baud>\n");
+				printf("  --help              Display help information\n");
+				printf("  -?                  Same as --help\n");
+				printf("  --version           Display version\n");
+				printf("  -v                  Same as --version\n");
+				return 0;
+				break;
+			default:
+				return 0;
+		}
       }
 
 
 
 	pthread_t id;
-	char ins[512]; // input string
 
 	int ret;
 	ret=pthread_create(&id,NULL,(void *) RS232_rx,NULL);
